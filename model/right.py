@@ -1,3 +1,5 @@
+'''  Documentación de right.py
+'''
 
 # -*- coding: utf-8 -*-
 
@@ -7,17 +9,17 @@ import datetime
 from . import *
 
 class Right(Entity):
-    """ Right. 
-    
+    """ Entidad Right del modelo de la applicación.
+
     Atributos:
         p_recid --  = None -> No grabado en la DB
                    <> None -> Recid con el que se registra en la DB
     """
 
-    def __init__(self, p_vrs, p_app, p_code, p_granted_value, 
+    def __init__(self, p_vrs, p_app, p_code, p_granted_value,
             p_protected_value, p_recid=None, p_fields_recid=None):
         ''' Constructor '''
-        
+
         # Inicializo propiedades
         l_row = list()
         l_row.append(EntityField('', p_app, True, False))
@@ -27,7 +29,7 @@ class Right(Entity):
         l_row.append(EntityField('', 'RightRow', False, True))
         Entity.__init__(self, p_vrs, l_row, p_recid)
 
-        RightRow(p_vrs, self, p_granted_value, p_protected_value, 
+        RightRow(p_vrs, self, p_granted_value, p_protected_value,
                 p_fields_recid)
 
     def get_gui_label(self):
@@ -61,15 +63,15 @@ class Right(Entity):
 class RightRow(Entity):
     """ Atributos simples de Application """
 
-    def __init__(self, p_vrs, p_right, p_granted_value, p_protected_value, 
+    def __init__(self, p_vrs, p_right, p_granted_value, p_protected_value,
             p_recid):
 
         # Inicializo propiedades
         l_row = list()
         l_row.append(EntityField('', p_right, True, False))
-        l_row.append(EntityField('granted_value', p_granted_value, 
+        l_row.append(EntityField('granted_value', p_granted_value,
             False, False))
-        l_row.append(EntityField('protected_value', p_protected_value, 
+        l_row.append(EntityField('protected_value', p_protected_value,
             False, False))
         Entity.__init__(self, p_vrs, l_row, p_recid)
 

@@ -4,16 +4,17 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.font as tkf
+import operator
 
 import perfiles.model as mm
 from . import View
 
 class VersionView(View):
-    ''' Vista Versiones 
+    ''' Vista Versiones
 
     '''
-   
-    def __init__(self, p_parent_wds, p_icon_lib, p_parent):        
+
+    def __init__(self, p_parent_wds, p_icon_lib, p_parent):
         '''Constructor'''
 
         # Definición de marco
@@ -23,7 +24,7 @@ class VersionView(View):
     def setup(self):
         ''' Configuro widgets '''
 
-        #Titulo Tamaño Icono        
+        #Titulo Tamaño Icono
         self['height'] = 200
         self['width'] = 300
         self['relief']='raised'
@@ -34,16 +35,16 @@ class VersionView(View):
         # Menues
         self.wds['vrsmenu'] = tk.Menu(self.wds['gl_menubar'],tearoff=0)
         self.wds['view_act_menu'] = 0
-        self.wds['vrsmenu'].add_command(label='Ver Esquema') 
+        self.wds['vrsmenu'].add_command(label='Ver Esquema')
         self.wds['diff_act_menu'] = 1
-        self.wds['vrsmenu'].add_command(label='Diferencias') 
+        self.wds['vrsmenu'].add_command(label='Diferencias')
         self.wds['val_act_menu'] = 2
         self.wds['vrsmenu'].add_command(label='Reumen Validacion')
-        self.wds['gl_menubar'].add_cascade(menu=self.wds['vrsmenu'], 
+        self.wds['gl_menubar'].add_cascade(menu=self.wds['vrsmenu'],
                 label='Version')
- 
+
         # widgets propios
-        self.wds['vrs_list'] = ttk.Treeview(self, columns = 
+        self.wds['vrs_list'] = ttk.Treeview(self, columns =
                 ('summary_col','e_date_col'), selectmode='browse')
         self.wds['vrs_list'].heading('#0', text = 'Vrs')
         self.wds['vrs_list'].column('#0', minwidth = 80, width = 80)
@@ -53,7 +54,7 @@ class VersionView(View):
         self.wds['vrs_list'].column('e_date_col', minwidth = 80, width = 80)
         self.wds['vrs_list']['height']=5
         l_font = tkf.Font(size=8)
-        self.wds['vrs_list'].tag_configure('version', font=l_font, 
+        self.wds['vrs_list'].tag_configure('version', font=l_font,
                 image=self.icon_lib['version16.png'])
 
         self.wds['view_act_bt'] = tk.Button(self)
@@ -68,13 +69,13 @@ class VersionView(View):
         self.wds['val_act_bt']['text'] = u'Validacion'
         self.wds['val_act_bt']['underline'] = 0
 
-        self.wds['vrs_list'].grid(column=0, row=4, columnspan=6, rowspan=2, 
+        self.wds['vrs_list'].grid(column=0, row=4, columnspan=6, rowspan=2,
                 sticky=tk.N+tk.E+tk.S+tk.W)
-        self.wds['view_act_bt'].grid(column=0, row=8, columnspan=2, 
+        self.wds['view_act_bt'].grid(column=0, row=8, columnspan=2,
                 sticky=tk.E+tk.W)
-        self.wds['diff_act_bt'].grid(column=2, row=8, columnspan=2, 
+        self.wds['diff_act_bt'].grid(column=2, row=8, columnspan=2,
                 sticky=tk.E+tk.W)
-        self.wds['val_act_bt'].grid(column=4, row=8, columnspan=2, 
+        self.wds['val_act_bt'].grid(column=4, row=8, columnspan=2,
                 sticky=tk.E+tk.W)
 
     def refresh_model(self, p_versions):
@@ -87,14 +88,17 @@ class VersionView(View):
 
         #Cargo nueva lista
         self.__versions = p_versions
-        
-        for l_vrs in self.__versions.values():
+        l_vrs_list = sorted(p_versions.items(), key=operator.itemgetter(0))
+        l_vrs_list.reverse()
+
+        for x, l_vrs in l_vrs_list:
+            print ('Estoy cargando version {}'.format(l_vrs.seq))
             l_ed = l_vrs.effective_date
             if l_ed == None:
                 l_ed = '-working-'
-            self.wds['vrs_list'].insert("", tk.END, l_vrs.seq, 
+            self.wds['vrs_list'].insert("", tk.END, l_vrs.seq,
                     text=l_vrs.seq, values=(
-                    l_vrs.summary.splitlines()[0], l_ed), 
+                    l_vrs.summary.splitlines()[0], l_ed),
                     tags='version')
 
     def prounp(self, p_view_mode):
@@ -123,8 +127,9 @@ class VersionView(View):
         if len(l_selection) == 0:
             return None
         l_seq = int(l_selection[0])
+        print('No encuentra secuencia {}'.format(l_seq))
         l_vrs = self.__versions[l_seq]
-            
+
         return l_vrs
 
 

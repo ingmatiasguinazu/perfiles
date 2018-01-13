@@ -7,17 +7,17 @@ import datetime
 from . import *
 
 class Application(Entity):
-    """ Applicacion. 
-    
+    """ Applicacion.
+
     Atributos:
         p_recid --  = None -> No grabado en la DB
                    <> None -> Recid con el que se registra en la DB
     """
 
-    def __init__(self, p_vrs, p_schema, p_code, p_name, 
+    def __init__(self, p_vrs, p_schema, p_code, p_name,
             p_recid=None, p_fields_recid=None):
         ''' Constructor '''
-        
+
         # Inicializo propiedades
         l_row = list()
         l_row.append(EntityField('', p_schema, True, False))
@@ -27,6 +27,8 @@ class Application(Entity):
         l_row.append(EntityField('', 'Rol', False, True))
         l_row.append(EntityField('', 'ApplicationRow', False, True))
         Entity.__init__(self, p_vrs, l_row, p_recid)
+        a = Entity()
+        a.
 
         ApplicationRow(p_vrs, self, p_name, p_fields_recid)
 
@@ -71,6 +73,4 @@ class ApplicationRow(Entity):
         l_row.append(EntityField('', p_application, True, False))
         l_row.append(EntityField('name', p_name, False, False))
         Entity.__init__(self, p_vrs, l_row, p_recid)
-
-
 

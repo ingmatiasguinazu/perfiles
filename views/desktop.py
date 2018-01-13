@@ -1,40 +1,39 @@
+''' Ese es el doucmento de base de destop.py '''
 
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+import os.path as osp
 import tkinter as tk
-import tkinter.ttk as ttk
 import tkinter.font as tkf
 
-import os, sys
-import os.path as osp
-
-import perfiles.model as mm
 
 class Desktop(tk.Tk):
     ''' Escritorio sobre el cual se posicionan las vistas
-    
+
     Componentes
     -->  Ventana principal:  tk()
     -->  Toolbar:  tk.Frame accesible via .wds['toolbar']
     -->  Marco Lateral:  tk.Frame accesible via .wds['lateralframe']
     -->  Marco Central:  tk.Frame accesible via .wds['centralframe']
     -->  Message Bar: tk.Label() accesible via .wds['usr_msg']
-    -->  Icon Lib:  diccionario de iconos accisble via .icon_lib[]
+    -->  Icon Lib:  diccionario de iconos accesble via .icon_lib[]
     '''
-   
-  
+
+
     def __init__(self):
         tk.Tk.__init__(self)
         self.icon_lib={}
-        self.load_icons()   
+        self.load_icons()
         self.wds={}
         self.setup()
         self.prounp('normal')
 
 
-    def setup(self): 
+    def setup(self):
         ''' Creo y configuro widgets '''
-        
+
         #Titulo Tamaño Icono
         self.iconphoto(self, self.icon_lib['perfiles128.png'])
         self.geometry("1024x680+1+1")
@@ -51,13 +50,13 @@ class Desktop(tk.Tk):
         self.wds['transmenu'].add_command(label='OK')
         self.wds['transCancel_act_menu'] = 1
         self.wds['transmenu'].add_command(label='Cancelar')
-        self.wds['gl_menubar'].add_cascade(menu=self.wds['transmenu'], 
+        self.wds['gl_menubar'].add_cascade(menu=self.wds['transmenu'],
                 label='Transaction')
-        
+
         #Widgets
-        self.wds['gl_toolbar'] = tk.Frame(self.master, 
+        self.wds['gl_toolbar'] = tk.Frame(self.master,
                 relief=tk.RAISED, bd=2, bg="#E5E5E5")
-        self.wds['gl_toolbar'].pack(side=tk.TOP, fill=tk.X) 
+        self.wds['gl_toolbar'].pack(side=tk.TOP, fill=tk.X)
         self.wds['transOK_act_bt'] = tk.Button(self.wds['gl_toolbar'],
                 image = self.icon_lib['ok32.png'])
         self.wds['transOK_act_bt'].pack(side=tk.LEFT)
@@ -67,32 +66,32 @@ class Desktop(tk.Tk):
 
         #Barra de mensaje
         l_font = tkf.Font(size=10, weight='bold')
-        self.wds['usr_msg']= tk.Label(self, padx=10,pady=2, 
+        self.wds['usr_msg']= tk.Label(self, padx=10,pady=2,
                 relief=tk.RIDGE, font=l_font, anchor=tk.W,
                 fg='black', bg='gray')
         self.wds['usr_msg'].pack(side=tk.BOTTOM, fill=tk.X)
 
         #Marco lateral
-        self.wds['lateralframe'] = tk.Frame(self.master, 
+        self.wds['lateralframe'] = tk.Frame(self.master,
                 relief=tk.RAISED, bd=2, bg="yellow")
-        self.wds['lateralframe'].pack(side=tk.LEFT, fill=tk.Y), 
+        self.wds['lateralframe'].pack(side=tk.LEFT, fill=tk.Y),
 
         #Marico Central
-        self.wds['centralframe'] = tk.Frame(self.master, 
+        self.wds['centralframe'] = tk.Frame(self.master,
                 relief=tk.RAISED, bd=2, bg="red")
-        self.wds['centralframe'].pack(side=tk.LEFT, fill=tk.BOTH, expand=True), 
+        self.wds['centralframe'].pack(side=tk.LEFT, fill=tk.BOTH, expand=True),
 
-    def load_icons(self): 
-        '''Inicializo diccionario de iconos''' 
+    def load_icons(self):
+        '''Inicializo diccionario de iconos'''
         self.icon_lib={}
         l_my_path = os.path.dirname(os.path.realpath(sys.argv[0]))
-        l_image_path = l_my_path + '\image' 
-        for l_fname in os.listdir(l_image_path): 
+        l_image_path = l_my_path + '/image'
+        for l_fname in os.listdir(l_image_path):
             if osp.isfile(osp.join(l_image_path, l_fname)):
                 try:
-                    key = os.path.basename(l_fname) 
-                    self.icon_lib[key] = tk.PhotoImage(file = 
-                            osp.join(l_image_path, l_fname)) 
+                    key = os.path.basename(l_fname)
+                    self.icon_lib[key] = tk.PhotoImage(file =
+                            osp.join(l_image_path, l_fname))
                 except: pass
 
     def prounp(self, p_view_mode):
@@ -136,7 +135,7 @@ class Desktop(tk.Tk):
         ''' Refresca modelo '''
         pass
 
-        
+
 
 
 

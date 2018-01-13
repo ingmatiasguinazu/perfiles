@@ -1,10 +1,39 @@
 
+
 # -*- coding: utf-8 -*-
 
-import os.path
-import datetime
-
 from . import *
+
+
+def get_select_SQL(p_entity):
+    """ Calcula y devuelve SQL Select que permite acceder a Entidades vigentes.
+
+    Parametros:
+        -> p_entity:  Nombre de la entidad para la cual se desea la SQL Select
+    """
+    return (            'SELECT mst.*, row.*, mst.recid as recid_a, '
+            +                  'row.recid as recid_b'
+            +            ' FROM {} AS mst'.format(p_entity)
+            +      ' INNER JOIN {}Row AS row'.format(p_entity)
+            +                   ' ON row.{} = '.format(p_entity.lower())
+            +                                     ' mst.recid'
+            +      ' INNER JOIN Version AS vrs_mst_from'
+            +                   ' ON vrs_mst_from.recid ='
+            +                                     ' mst.version_from'
+            +      ' INNER JOIN Version AS vrs_row_from'
+            +                   ' ON vrs_row_from.recid ='
+            +                                     ' row.version_from'
+            + ' LEFT OUTER JOIN Version vrs_mst_to'
+            +                   ' ON vrs_mst_to.recid = mst.version_to'
+            + ' LEFT OUTER JOIN Version vrs_row_to'
+            +                   ' ON vrs_row_to.recid = row.version_to'
+            +           ' WHERE vrs_mst_from.seq <= ?'
+            +             ' AND ( vrs_mst_to.seq > ? OR '
+            +                                   'vrs_mst_to.seq is NULL )'
+            +             ' AND vrs_row_from.seq <= ?'
+            +             ' AND ( vrs_row_to.seq > ? OR '
+            +                                   'vrs_row_to.seq is NULL )')
+
 
 class Version():
     """ Versions
@@ -30,16 +59,16 @@ class Version():
         # Me inicializo en componentes con relaciones OneToMenuMe
         self.app_file.versions[p_seq] = self
 
-    def undo_changes(self): 
+    def undo_changes(self):
         "Deshace cambios y elimina version en DB."
         pass #TO COMPLETE
- 
 
     def has_unsaved_changes(self):
-        "Indica si existen cambios sin grabar."
-        
+        """Indica si existen cambios sin grabar.
+        """
+
         if self.recid == None:
-            return True 
+            return True
 
         l_db_cnx = self.app_file.db_cnx
 
@@ -55,13 +84,12 @@ class Version():
             if l_field not in ('app_file',):
                 if self.__dict__[l_field] != l_row[l_field]:
                     return True
- 
+
         return False #No hay cambios
 
-   
-
     def get_schema(self):
-        "Devuelve el esquema vigente a esta version."
+        """Devuelve el esquema vigente a esta version.
+        """
 
         l_schema = Schema(self)
 
@@ -70,41 +98,36 @@ class Version():
         if l_db_cnx == None:
             return l_schema
 
+        l_entities = dict()
         ##############################################
-        ##          CREO APLICACIONES     
+        #           CARGO APLICACIONES
         ##############################################
-        #Cargo aplicaciones
-        l_SQL = (           'SELECT app.*, app_row.*, app.recid as recid_a, app_row.recid as recid_b'
-                +            ' FROM Application AS app'
-                +      ' INNER JOIN ApplicationRow AS app_row' 
-                +                   ' ON app_row.application ='  
-                +                                     ' app.recid'
-                +      ' INNER JOIN Version AS vrs_app_from' 
-                +                   ' ON vrs_app_from.recid ='  
-                +                                     ' app.version_from'
-                +      ' INNER JOIN Version AS vrs_row_from' 
-                +                   ' ON vrs_row_from.recid ='  
-                +                                     ' app_row.version_from'
-                + ' LEFT OUTER JOIN Version vrs_app_to' 
-                +                   ' ON vrs_app_to.recid = app.version_to' 
-                + ' LEFT OUTER JOIN Version vrs_row_to' 
-                +                   ' ON vrs_row_to.recid = app_row.version_to' 
-                +           ' WHERE vrs_app_from.seq <= ?'
-                +             ' AND ( vrs_app_to.seq > ? OR '
-                +                                   'vrs_app_to.seq is NULL )'
-                +             ' AND vrs_row_from.seq <= ?'
-                +             ' AND ( vrs_row_to.seq > ? OR '
-                +                                   'vrs_row_to.seq is NULL )')
+        l_entity = 'Application'
+        l_entities[l_entity] = dict()
+        l_SQL = get_select_SQL(l_entity)
         l_params = (l_seq, l_seq, l_seq, l_seq)
-        l_rows = l_db_cnx.execute(l_SQL, l_params) 
+        l_rows = l_db_cnx.execute(l_SQL, l_params)
         for l_row in l_rows:
-            l_app = Application(self, l_schema, l_row['code'], 
-                    l_row['name'], l_row['recid_a'], l_row['recid_b'])
-            a=Right(self, l_app, 'RESTRINCT', 'NO', 'YES')
-            Right(self, l_app, 'ADD', '', 'add')
-            Right(self, l_app, 'MODITY', '', 'modify')
-            Right(self, l_app, 'DELETE', '', 'delete')
-            print(l_app)
+            l_entities[l_entity][l_row['recid']] = (
+                Application(self, l_schema, l_row['code'],
+                            l_row['name'], l_row['recid_a'], l_row['recid_b']))
+            print(l_entities[l_entity][l_row['recid']])
+
+        ##############################################
+        #           CARGO RIGHTS
+        ##############################################
+        l_entity = 'Right'
+        l_entities[l_entity] = dict()
+        l_SQL = get_select_SQL(l_entity)
+        l_params = (l_seq, l_seq, l_seq, l_seq)
+        l_rows = l_db_cnx.execute(l_SQL, l_params)
+        for l_row in l_rows:
+            l_app = l_entities['Application'][l_row['application']]
+            l_entities[l_entity][l_row['recid']] = (
+                Right(self, l_app, l_row['code'], l_row['granted_value'],
+                      l_row['protected_value'], l_row['recid_a'],
+                      l_row['recid_b']))
+            print(l_entities[l_entity][l_row['recid']])
 
         return l_schema
 
@@ -127,16 +150,16 @@ class Version():
             raise NotFileSelectedError()
 
         if self.recid != None:
-            l_SQL = ('UPDATE Version' 
+            l_SQL = ('UPDATE Version'
                     +'   SET summary = ?'
                     +     ', effective_date = ?'
                     +     ', seq = ?'
                     +' WHERE recid = ?')
-            l_params = (self.summary, self.effective_date, self.seq, 
-                    self.recid)  
+            l_params = (self.summary, self.effective_date, self.seq,
+                    self.recid)
             l_db_cnx.execute(l_SQL, l_params)
         else:
-            l_SQL = ( 'INSERT INTO Version' 
+            l_SQL = ( 'INSERT INTO Version'
                     +           ' (summary, effective_date, seq)'
                     +     ' VALUES (?,?,?)' )
             l_params = (self.summary, self.effective_date, self.seq)
@@ -145,14 +168,12 @@ class Version():
             self.recid = l_cursor.lastrowid
         print('Grabo version son SQL {} y parametros {}'.format(l_SQL, l_params))
         l_db_cnx.commit()
-            
+
 
     def __str__(self):
-        l_text = '"Version" ' 
+        l_text = '"Version" '
         l_text = l_text + ' [seq]=%i' % (self.seq,)
         l_text = l_text + ' [summaty]=%s' % (self.summary,)
         l_text = l_text + ' [effective_date]=%s' % (self.effective_date,)
         return l_text
-
-    
 
