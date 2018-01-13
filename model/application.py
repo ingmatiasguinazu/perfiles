@@ -27,8 +27,6 @@ class Application(Entity):
         l_row.append(EntityField('', 'Rol', False, True))
         l_row.append(EntityField('', 'ApplicationRow', False, True))
         Entity.__init__(self, p_vrs, l_row, p_recid)
-        a = Entity()
-        a.
 
         ApplicationRow(p_vrs, self, p_name, p_fields_recid)
 
