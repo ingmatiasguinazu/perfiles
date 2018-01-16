@@ -31,6 +31,7 @@ la DB)
 # -*- coding: utf-8 -*-
 
 from .exc import *
+import operator
 
 
 G_LOCAL_ATTR = ('objid', 'recid', 'version', 'deleted', 'schema', 'pk')
@@ -55,10 +56,10 @@ class EntityField():
     """Field utilizado para crear atributos al instanciar un Entity.
 
     Atributos:
-        p_name:  Nombre del Field
-        p_value:  Valor del Field
-        p_pk: Indicador de indice unico
-        p_otm:  Indicador de campo oneToMeny
+        name:  Nombre del Field
+        value:  Valor del Field
+        pk: Indicador de indice unico
+        otm:  Indicador de campo oneToMeny
 
     Métodos:
         Ninguno
@@ -127,7 +128,7 @@ class Entity():
         Parametros:
             p_vrs: Obligatorio. Version utilizada para crear la Entidad.
             p_row: Obligatorio. Lista de EntityFields que describen la Entidad
-            p_recid: Opcionl.  Identificador unico en la DB de persistencia.
+            p_recid: Opcionial.  Identificador unico en la DB de persistencia.
                      Se espera entero.  Si ausente => None
             p_reinit: Opcional.  Indicador de reunicio completo de Entidades.
                       Se espera lógico.  Si ausente => False
@@ -227,13 +228,7 @@ class Entity():
 
         """
         # one_to_many: reseteo a todos como nuevos
-        for l_self_attr in self.__dict__.values():
-            if isinstance(l_self_attr, dict):
-                l_dict = dict()
-                l_dict.update(l_self_attr)
-                for l_otm in l_dict.values():
-                    if isinstance(l_otm, Entity):
-                        l_otm.reset_as_new()
+        self.__do_for_otm((lambda x: x.reset_as_new()))
 
         self.recid = None
         if self.deleted:
@@ -478,16 +473,8 @@ class Entity():
         """ Se elimina (Eliminación a no grabar en archivo DB de persistencia)
         """
 
-        # one_to_many: Elimino los oneToMeny
-        self.__do_for_otm((lambda x: x.destroy()))
-
-        # Me elimino de los menyToOne
-        for l_parent_attr in self.__dict__.values():
-            if isinstance(l_parent_attr, Entity):
-                for l_mto_dict in l_parent_attr.__dict__.values():
-                    if isinstance(l_mto_dict, dict):
-                        if self.objid in l_mto_dict:
-                            del l_mto_dict[self.objid]
+        self.reset_as_new()
+        self.delete()
 
     def is_gui_visible(self):
         """Indica si es visible en la GUI
@@ -497,7 +484,8 @@ class Entity():
     def get_entities(self):
         """ Devuelve lista con todas las entidades
         """
-        return Entity.__entities.values()
+        return ([l_value for l_key, l_value in sorted(
+            Entity.__entities.items(), key=operator.itemgetter(0))])
 
     def get_entity(self, p_key):
         """ Devuelve una entidad.
@@ -514,6 +502,25 @@ class Entity():
             if p_key in Entity.__entities:
                 return Entity.__entities[p_key]
         return None
+
+    def get_entities_statistic(self):
+        """ Entrega estadisticas del modelo
+
+        Parametros:  Ninguno
+        """
+        l_ret = ''
+        l_ac = 0
+        l_first_objid = 999999
+        l_last_objid = 0
+        for l_entity in Entity.__entities.values():
+            if l_entity.objid < l_first_objid:
+                l_first_objid = l_entity.objid
+            if l_entity.objid > l_last_objid:
+                l_last_objid = l_entity.objid
+            l_ac += 1
+        l_ret = ('ESTADISTICAS ENTITIES:  [Total Entidades: {}] '
+                 + '[Primer objid: {}] [Ultimo objid: {}]')
+        return l_ret.format(l_ac, l_first_objid, l_last_objid)
 
     def __str__(self):
         """ Devuelve cadena con la información de la Entidad

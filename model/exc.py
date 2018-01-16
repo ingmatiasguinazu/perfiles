@@ -33,6 +33,12 @@ class UnsavedChangesExistsError(AppError):
     def __str__(self):
         return self.msg
 
+class NoChangesForVersionError(AppError):
+    def __init__(self):
+        self.msg = (u'Ups! La version no tiene cambios.  '
+                    + 'No tiene sentido hacer un upgrade')
+    def __str__(self):
+        return self.msg
 
 class VersionDateNotPermitedError(AppError):
     def __init__(self):
@@ -99,8 +105,8 @@ class EntityFieldNotExistsError(AppError):
 
 class EntityFieldNewValueTypeError(AppError):
     def __init__(self, p_field='', p_class='', p_expected_class=''):
-        self.msg = (u'Nuevo valor para campo ' 
-                + '{} es de tipo {}.  Se espera tipo {}'.format(p_field, 
+        self.msg = (u'Nuevo valor para campo '
+                + '{} es de tipo {}.  Se espera tipo {}'.format(p_field,
                     p_class, p_expected_class))
     def __str__(self):
         return self.msg

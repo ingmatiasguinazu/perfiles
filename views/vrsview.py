@@ -92,7 +92,6 @@ class VersionView(View):
         l_vrs_list.reverse()
 
         for x, l_vrs in l_vrs_list:
-            print ('Estoy cargando version {}'.format(l_vrs.seq))
             l_ed = l_vrs.effective_date
             if l_ed == None:
                 l_ed = '-working-'

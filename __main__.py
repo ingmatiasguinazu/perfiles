@@ -5,6 +5,7 @@
 import tkinter as tk
 import tkinter.filedialog as fdlg
 import tkinter.messagebox as mbox
+import datetime as dt
 
 
 import perfiles.model as mm
@@ -451,7 +452,6 @@ class VersionVal(Transaction):
             print('modifico name')
             l_new_name = l_app.get_rowfield('name') + '_m_'
             l_app.set_rowfield('name', l_new_name)
-        self.controler.refresh_model()
 
 
 class VersionView(Transaction):
@@ -464,7 +464,6 @@ class VersionView(Transaction):
 
     def pretrans_validation(self):
         l_ret = list()
-
         l_ret.append(0)
         l_ret.append('')
         return l_ret
@@ -487,7 +486,9 @@ class VersionView(Transaction):
         mbox.showinfo('Implementacion Pendiente',
                       '{} Schema trans aun no implementada'.format(
                           self.__class__.__name__))
-
+        # debug
+        l_app = mm.Application(self.controler.app_file.wrk_schema.version,  self.controler.app_file.wrk_schema,"XXX", "YYYYYY")
+        self.controler.refresh_model()
 
 class VersionDiff(Transaction):
 
@@ -520,12 +521,16 @@ class VersionDiff(Transaction):
                       '{} Schema trans aun no implementada'.format(
                           self.__class__.__name__))
 
-        a = self.controler.app_file.wrk_schema.applications[3]
-        print('Delete de {}'.format(a.code))
-        a.delete()
+        # debug
+#        self.controler.app_file.upgrade_version(dt.datetime(2019,1,1).date())
+#        self.controler.app_file.downgrade_version()
+        self.controler.app_file.undo_version_changes()
+        self.controler.refresh_model()
+        print('hizo upgrade version')
 
 
-
-
+################################################################################
+#                           CICLO PRINCIPAL
+################################################################################
 if __name__ == "__main__":
     Controler().views['desktop'].mainloop()
