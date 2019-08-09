@@ -6,15 +6,15 @@ import tkinter.ttk as ttk
 import tkinter.font as font
 
 class View(tk.Frame):
-    
-   
+
+
     def __init__(self, p_parent_wds, p_icon_lib, p_parent):
         ''' Constructor '''
-        
+
         # Definición de marco
         tk.Frame.__init__(self, p_parent)
         self.icon_lib=p_icon_lib
-        
+
         # Cargo widgets globales
         self.wds={}
         for l_wds_key in p_parent_wds.keys():

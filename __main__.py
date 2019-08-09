@@ -448,10 +448,9 @@ class VersionVal(Transaction):
         mbox.showinfo('Implementacion Pendiente',
                       '{} Schema trans aun no implementada'.format(
                           self.__class__.__name__))
-        for l_app in self.controler.app_file.wrk_schema.applications.values():
-            print('modifico name')
-            l_new_name = l_app.get_rowfield('name') + '_m_'
-            l_app.set_rowfield('name', l_new_name)
+
+        self.controler.app_file.clean_versions(
+            self.controler.app_file.versions[5])
 
 
 class VersionView(Transaction):

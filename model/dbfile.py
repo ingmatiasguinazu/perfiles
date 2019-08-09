@@ -3,9 +3,10 @@
 
 import sqlite3
 
+
 class DBFile:
     def __init__(self,p_file):
-        
+
         l_db_cnx = sqlite3.connect(p_file)
 
         l_SQL = ('CREATE TABLE Version ('
@@ -14,7 +15,7 @@ class DBFile:
                 +             'effective_date DATE,'
                 +             'seq INTEGER UNIQUE )')
         l_db_cnx.execute(l_SQL)
-        
+
         l_SQL = ('CREATE TABLE Application ('
                 +             'recid INTEGER PRIMARY KEY,'
                 +             'code TEXT,'
@@ -58,7 +59,7 @@ class DBFile:
                 +      ' protected_value TEXT)' )
         l_db_cnx.execute(l_SQL)
 
-        #TO COMPLETE:  crear todo el modelo de tablas        
+        #TO COMPLETE:  crear todo el modelo de tablas
 
 
         l_db_cnx.commit()

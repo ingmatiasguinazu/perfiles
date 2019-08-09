@@ -1,4 +1,21 @@
+""" Implementa la Entidad Persistente Version.
 
+Toda modificación en las entidades del esquema de trabajo, se asocia a una
+version.
+
+CLASES
+======
+- Version
+
+EXCEPCIONES
+===========
+- CorruptDataBaseError:  Al intentar acceder a la base de datos para buscar la
+                         version grabada y no encontrarla
+- KeyAlreadyExistsError:  Al intentar instanciar una Version son secuencia ya
+                          utilizada por otra version
+- NotFileSelectedError: Al ejecutar un método que requiere acceso al Archivo DB
+                        y el AppFile aun no ha sido grabado
+"""
 
 # -*- coding: utf-8 -*-
 
@@ -10,8 +27,23 @@ G_ENTITIES = ['RightRow', 'Right',
               'ApplicationRow', 'Application'
               ]
 
+def get_delete_SQL(p_entity):
+    """ Calcula y devuelve SQL Select que permite acceder a Entidades vigentes.
+
+    Parametros:
+        -> p_entity:  Nombre de la entidad para la cual se desea la SQL Select
+    """
+    return (' DELETE FROM {} as mst WHERE mst.recid IN'
+            +          '(SELECT ent.recid'
+            +            ' FROM {} AS ent'.format(p_entity)
+            +      ' INNER JOIN Version vrs_ent_to'
+            +                   ' ON vrs_ent_to.recid = mst.version_to'
+            +           ' WHERE vrs_ent_from.seq < ?'
+            +             ' AND ent.recid = mst.recid)')
+
 
 def get_select_SQL(p_entity):
+
     """ Calcula y devuelve SQL Select que permite acceder a Entidades vigentes.
 
     Parametros:
@@ -42,13 +74,31 @@ def get_select_SQL(p_entity):
 
 
 class Version():
-    """ Versions
+    """Version de la aplicación.
 
     Atributos:
-        __applications
+        app_file: Archivo de la aplicación
+        seq:  Secuencia de la version.
+        summary:  Descripción de la aplicación
+        effective_date:  Fecha de vigencia de la modificación
+
+    Métodos:
+        get_schema:  Devuelve el esquema de entidades vigente hasta
+            esta version inclusive
+        reset_as_new: Restablece la version a inicial y nueva
+        has_unsaved_changes: Indica si existen modificaciones de la version no
+            grabadas
+        has_changes: Indica si existen modificaciones en el esquema de
+            entidades grabados a partir de esta version
+        save: Graba las modificaciones en el archivo DB de persistencia
+        undo_changes: Elimina modificaciones realizadas en el equema de
+            entidades con la version
+        delete: Elimina la version y las modificaciones realizadas en el equema
+            de entidades
+
     """
 
-    def __init__(self, p_app_file, p_seq, p_summary, p_recid=None):
+    def  __init__(self, p_app_file, p_seq, p_summary, p_recid=None):
         """ Instancia un nuevo objeto.
 
         Parametros:
@@ -61,7 +111,7 @@ class Version():
 
         # Validaciones a la creacion
         if p_seq in p_app_file.versions:
-            raise exc.KeyAlreadyExistsError()
+            raise KeyAlreadyExistsError()
 
         # Inicializo propiedades
         self.app_file = p_app_file
@@ -93,7 +143,7 @@ class Version():
         del self.app_file.versions[self.seq]
 
     def get_schema(self):
-        """Devuelve el esquema vigente a esta version.
+        """Devuelve el esquema de entidades vigente hasta esta version.
         """
         l_schema = Schema(self)
 
@@ -136,7 +186,7 @@ class Version():
         return l_schema
 
     def reset_as_new(self):
-        """ Setea la version como version de trabajo
+        """Restablece la version a inicial y nueva.
         """
         self.recid = None
         self.effective_date = None
@@ -144,7 +194,8 @@ class Version():
         self.summary = '-- Nueva Version --'
 
     def save(self):
-        "Registra las modificaciones permanentemente"
+        """Graba las modificaciones en el archivo DB de persistencia.
+        """
 
         if not self.has_unsaved_changes():
             return
@@ -170,7 +221,6 @@ class Version():
             l_cursor = l_db_cnx.cursor()
             l_cursor.execute(l_SQL, l_params) #inserto el nuevo registro
             self.recid = l_cursor.lastrowid
-        print('Grabo version son SQL {} y parametros {}'.format(l_SQL, l_params))
         l_db_cnx.commit()
 
     def has_unsaved_changes(self):
@@ -189,7 +239,7 @@ class Version():
         l_params = (self.recid, )
         l_row = l_db_cnx.execute(l_SQL, l_params).fetchone()
         if l_row == None:
-            raise exc.CorruptDataBaseError()
+            raise CorruptDataBaseError()
 
         for l_field in self.__dict__.keys():
             if l_field not in ('app_file',):
@@ -199,7 +249,7 @@ class Version():
         return False  # No hay cambios
 
     def has_changes(self):
-        """ Indica si la version registra cambios en el Archivo DB
+        """Indica si existen modificaciones en el esquema de entidades.
         """
 
         l_db_cnx = self.app_file.db_cnx
@@ -227,7 +277,7 @@ class Version():
 
         l_db_cnx = self.app_file.db_cnx
         if l_db_cnx is None:
-            raise NotFileSelectedError()
+             raise NotFileSelectedError()
 
         for l_entity in G_ENTITIES:
             #  Elimino registros creados con la version
@@ -244,6 +294,7 @@ class Version():
             l_db_cnx.execute(l_SQL, l_params)
 
         l_db_cnx.commit()
+
 
     def __str__(self):
         l_text = '"Version" '

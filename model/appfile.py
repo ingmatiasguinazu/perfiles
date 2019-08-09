@@ -4,6 +4,13 @@ CLASES
 ======
 - AppFile: Archivo de la aplicación
 
+EXCEPCIONES
+===========
+- NotFileSelectedError
+- NoChangesForVersionError
+- VersionDateNotPermited
+- DateTooOldError
+- NotPreviousVersionExistsError
 """
 # -*- coding: utf-8 -*-
 
@@ -15,175 +22,225 @@ from . import *
 
 
 class AppFile:
-    """Archivo de la applicación.
+        """Archivo de la applicación.
 
-    Atributos
-        db_cnx:  Conexion al archivo DB
-        db_file:  Nombre completo del archivo DB
-        versions:  diccionario de versiones (clave version.seq)
+        Atributos
+        r   db_cnx:  Conexion al archivo DB
+            db_file:  Nombre completo del archivo DB
+            versions:  diccionario de versiones (clave version.seq)
 
-    Métodos:
-        open: Abre un archivo DB carga sus versiones y esquema de trabajo
-        saveas: Graba el esquema de trabajo en un nuevo archivo
-        discare_unsaved_changes:  descarta cambios no guardados del esquema
-        upgrade_version:  finaliza la version de trabajo e inicializa una nueva
-        undo_version_changes:  deshace en esquema de trabajo los cambios de
-                               la version
-        downgrade_version: elimina version de trabajo y reabre version anterior
-
-    """
-
-    def __init__(self):
-        """Instancia objeto y/o inicializa propiedades.
-
-        Parametros:  Ninguno
-        """
-        self.db_cnx = None
-        self.db_file = None
-        self.versions = {}
-        l_vrs = Version(self, 1, '-- Nueva Version --')
-        self.wrk_schema = l_vrs.get_schema()
-
-    def open(self, p_file):
-        """ Abre archivo existente
-
-        Parametros:
-            p_file:  ruta completa del archivo DB a abrir
+        Métodos:
+            open: Abre un archivo DB carga sus versiones y esquema de trabajo
+            saveas: Graba el esquema de trabajo en un nuevo archivo
+            discare_unsaved_changes:  descarta cambios no guardados del esquema
+            upgrade_version:  finaliza la version de trabajo e inicializa una nueva
+            undo_version_changes:  deshace en esquema de trabajo los cambios de
+                                   la version
+            downgrade_version: elimina version de trabajo y reabre version anterior
+            clean_versions:  Depura historial hasta version x.
 
         """
 
-        # Verifico si archivo pre-existente
-        if not os.path.isfile(p_file):
-            raise NotFileSelectedError(p_file)
+        def __init__(self):
+                """Instancia objeto y/o inicializa propiedades.
 
-        # Destruyo esquema y versiones actuales
-        self.wrk_schema.destroy()
-        self.versions.clear()
+                Parametros:  Ninguno
+                """
+                self.db_cnx = None
+                self.db_file = None
+                self.versions = {}
+                l_vrs = Version(self, 1, '-- Nueva Version --')
+                self.wrk_schema = l_vrs.get_schema()
 
-        # Abro el archivo mediante conexion
-        if self.db_cnx is not None:
-            self.db_cnx.close()
-        self.db_cnx = sqlite3.connect(p_file,
-                                      detect_types=sqlite3.PARSE_DECLTYPES)
-        self.db_file = p_file
-        self.db_cnx.row_factory = sqlite3.Row
+        def open(self, p_file):
+                """ Abre archivo existente
 
-        # TO COMPLETE:  Validar coherencia Estructura Archivo
+                Parametros:
+                    p_file:  ruta completa del archivo DB a abrir
 
-        #Cargo las Versions
-        l_SQL = (   'SELECT * '
-                +     'FROM Version '
-                + 'ORDER BY seq DESC')
-        l_rows = self.db_cnx.execute(l_SQL)
-        l_vrs = None
-        l_wrk_vrs = None
-        for l_row in l_rows:
-            if l_wrk_vrs is None and l_row['effective_date'] is not None:
-                l_wrk_vrs = Version(self, l_row['seq'] + 1,
-                        '-- Nueva Version --')
-            l_vrs = Version(self, l_row['seq'], l_row['summary'],
-                  l_row['recid'])
-            l_vrs.effective_date = l_row['effective_date']
-            if l_vrs.effective_date is None:
-                l_wrk_vrs = l_vrs
+                """
 
-        self.wrk_schema = l_wrk_vrs.get_schema()
-        # debug
-        print('Hice Open.  Estadistica: {}'.format(
-            self.wrk_schema.get_entities_statistic()))
+                # Verifico si archivo pre-existente
+                if not os.path.isfile(p_file):
+                        raise NotFileSelectedError(p_file)
 
-    def saveas(self, p_file):
-        """Grabo en nuevo archivo
+                # Destruyo esquema y versiones actuales
+                self.wrk_schema.destroy()
+                self.versions.clear()
 
-        Parametros:
-            p_file:  ruta completa del archivo DB a abrir
+                # Abro el archivo mediante conexion
+                if self.db_cnx is not None:
+                        self.db_cnx.close()
+                self.db_cnx = sqlite3.connect(
+                    p_file, detect_types=sqlite3.PARSE_DECLTYPES)
+                self.db_file = p_file
+                self.db_cnx.row_factory = sqlite3.Row
 
-        """
-        # Verifico si archivo pre-existente
-        if os.path.isfile(p_file):
-            os.remove(p_file)
+                # TO COMPLETE:  Validar coherencia Estructura Archivo
 
-        # Abro el archivo mediante conexion
-        if self.db_cnx is not None:
-            self.db_cnx.close()
-        self.db_cnx = sqlite3.connect(p_file)
-        self.db_file = p_file
-        self.db_cnx.row_factory = sqlite3.Row
-        DBFile(p_file)
+                # Cargo las Versions
+                l_SQL = ('SELECT * '
+                         + 'FROM Version '
+                         + 'ORDER BY seq DESC')
+                l_rows = self.db_cnx.execute(l_SQL)
+                l_vrs = None
+                l_wrk_vrs = None
+                for l_row in l_rows:
+                        if l_wrk_vrs is None and l_row['effective_date'] is not None:
+                                l_wrk_vrs = Version(self, l_row['seq'] + 1,
+                                                    '-- Nueva Version --')
+                        l_vrs = Version(self, l_row['seq'], l_row['summary'],
+                                        l_row['recid'])
+                        l_vrs.effective_date = l_row['effective_date']
+                        if l_vrs.effective_date is None:
+                                l_wrk_vrs = l_vrs
 
-        self.wrk_schema.reset_as_new()
-        self.wrk_schema.version.reset_as_new()
-        self.versions.clear()
-        self.versions[self.wrk_schema.version.seq] = self.wrk_schema.version
+                self.wrk_schema = l_wrk_vrs.get_schema()
+                # debug
+                print('Hice Open.  Estadistica: {}'.format(
+                    self.wrk_schema.get_entities_statistic()))
 
-        self.wrk_schema.save()
+        def saveas(self, p_file):
+                """Grabo en nuevo archivo
 
-    def discare_unsaved_changes(self):
-        """ Descarta cambios no guardados.
+                Parametros:
+                    p_file:  ruta completa del archivo DB a abrir
 
-        Paramtros: Ninguno
-        """
+                """
+                # Verifico si archivo pre-existente
+                if os.path.isfile(p_file):
+                        os.remove(p_file)
 
-        if self.db_file is not None:
-            self.open(self.db_file)
-        else:
-            self.wrk_schema.destroy()
-            self.__init__()
+                # Abro el archivo mediante conexion
+                if self.db_cnx is not None:
+                        self.db_cnx.close()
+                self.db_cnx = sqlite3.connect(p_file)
+                self.db_file = p_file
+                self.db_cnx.row_factory = sqlite3.Row
+                DBFile(p_file)
 
-    def upgrade_version(self, p_eff_date):
-        """Cierra la version de trabajo e inicializa una nuevai.
+                self.wrk_schema.reset_as_new()
+                self.wrk_schema.version.reset_as_new()
+                self.versions.clear()
+                self.versions[self.wrk_schema.version.seq] = self.wrk_schema.version
 
-        Parametros:
-            p_eff_date: Obligatorio. Vigencia de los cambios de la
-            version.  Se espera fecha no anterior a vigencia de version
-            precedente
+                self.wrk_schema.save()
 
-        """
+        def discare_unsaved_changes(self):
+                """ Descarta cambios no guardados.
 
-        if (not self.wrk_schema.has_unsaved_changes()
-                and not self.wrk_schema.version.has_changes()):
-            raise NoChangesForVersionError()
+                Paramtros: Ninguno
+                 """
 
-        if p_eff_date is None:
-            raise VersionDateNotPermited()
+                if self.db_file is not None:
+                        self.open(self.db_file)
+                else:
+                        self.wrk_schema.destroy()
+                        self.__init__()
 
-        l_date_min = dt.datetime(2000,1,1).date()
-        if p_eff_date < l_date_min:
-            raise DateTooOldError()
+        def upgrade_version(self, p_eff_date):
+                """Cierra la version de trabajo e inicializa una nuevai.
 
-        l_prev_date = l_date_min - dt.timedelta(days=1)
-        l_seq = self.wrk_schema.version.seq
-        if ( l_seq - 1 ) in self.versions:
-            l_prev_date = self.versions[l_seq-1].effective_date
-        if p_eff_date < l_prev_date:
-            raise VersionDateNotPermited()
+                Parametros:
+                    p_eff_date: Obligatorio. Vigencia de los cambios de la
+                    version.  Se espera fecha no anterior a vigencia de version
+                    precedente
 
-        self.wrk_schema.version.effective_date = p_eff_date
-        self.wrk_schema.version.save()
-        self.wrk_schema.save()
-        self.discare_unsaved_changes()
+                """
 
-    def undo_version_changes(self):
-        """Elimina modificaciones realizadas con la version.
+                if (not self.wrk_schema.has_unsaved_changes()
+                        and not self.wrk_schema.version.has_changes()):
+                        raise NoChangesForVersionError()
 
-        Parametros: Ninguno
-        """
+                if p_eff_date is None:
+                        raise VersionDateNotPermited()
 
-        if self.db_file is not None:
-            self.wrk_schema.version.undo_changes()
-        self.discare_unsaved_changes()
+                l_date_min = dt.datetime(2000, 1, 1).date()
+                if p_eff_date < l_date_min:
+                        raise DateTooOldError()
 
-    def downgrade_version(self):
-        """Elimina modificaciones realizadas con la version.
+                l_prev_date = l_date_min - dt.timedelta(days=1)
+                l_seq = self.wrk_schema.version.seq
+                if (l_seq - 1) in self.versions:
+                        l_prev_date = self.versions[l_seq-1].effective_date
+                if p_eff_date < l_prev_date:
+                        raise VersionDateNotPermited()
 
-        Parametros: Ninguno
-        """
+                self.wrk_schema.version.effective_date = p_eff_date
+                self.wrk_schema.version.save()
+                self.wrk_schema.save()
+                self.discare_unsaved_changes()
 
-        l_prev_seq = self.wrk_schema.version.seq - 1
-        if l_prev_seq not in self.versions:
-            raise NotPreviousVersionExistsError()
+        def undo_version_changes(self):
+                """Elimina modificaciones realizadas con la version.
 
-        self.wrk_schema.version.delete()
-        self.versions[l_prev_seq].effective_date = None
-        self.versions[l_prev_seq].save()
-        self.discare_unsaved_changes()
+                Parametros: Ninguno
+                """
+
+                if self.db_file is not None:
+                        self.wrk_schema.version.undo_changes()
+                self.discare_unsaved_changes()
+
+        def downgrade_version(self):
+                """Elimina modificaciones realizadas con la version.
+
+                Parametros: Ninguno
+                """
+
+                l_prev_seq = self.wrk_schema.version.seq - 1
+                if l_prev_seq not in self.versions:
+                        raise NotPreviousVersionExistsError()
+
+                self.wrk_schema.version.delete()
+                self.versions[l_prev_seq].effective_date = None
+                self.versions[l_prev_seq].save()
+                self.discare_unsaved_changes()
+
+        def clean_versions(self, p_first_vrs):
+                """Elimina historial de versiones anteriores a version deseada.
+
+                Parametros:
+                    p_first_vrs:  version inicial deseada
+
+                Ejemplo:
+                    clan_versions(p_vrs_seq_5) generara un archivo con el esquema
+                    inicial de la version 5 y el historico 6, 7, ....
+                """
+
+                l_new_app_file = AppFile()
+
+                for l_seq, l_vrs in sorted(self.versions.items(),
+                                           key=operator.itemgetter(0)):
+                        if l_seq >= p_first_vrs.seq:
+                                l_new_app_file.wrk_schema = l_vrs.get_schema()
+                                l_new_app_file.wrk_schema.reset_as_new()
+                                l_vrs.app_file = l_new_app_file
+                                # guardo los atributos de la vrs porque se
+                                # reiniciliza
+                                l_vrs_attr = dict()
+                                l_vrs_attr.update(l_vrs.__dict__)
+                                l_new_app_file.versions[l_vrs.seq] = l_vrs
+                                if l_new_app_file.db_file is None:
+                                        print('clean_version.  grabo inicial (vrs={})'.format(
+                                            l_vrs.seq))
+                                        l_new_app_file.saveas(
+                                            '{}.tmp'.format(self.db_file))
+                                else:
+                                        print('clean_version.  grabo (vrs={})'.format(
+                                            l_vrs.seq))
+                                        l_vrs.reset_as_new()
+                                        l_new_app_file.wrk_schema.save()
+
+                                # restablezco los los atributos de la vrs salvo
+                                # recid
+                                l_aux_recid = l_vrs.recid
+                                l_vrs.__dict__.update(l_vrs_attr)
+                                l_vrs.recid = l_aux_recid
+                                l_vrs.save()
+                                l_new_app_file.wrk_schema.destroy()
+
+                if l_new_app_file.db_file is not None:
+                        self.db_cnx.close()
+                        l_new_app_file.db_cnx.close()
+                        os.replace(l_new_app_file.db_file, self.db_file)
+                        self.discare_unsaved_changes()

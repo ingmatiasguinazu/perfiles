@@ -1,4 +1,4 @@
-'''
+"""
 Paquete Model de la applicación Perfiles
 ----------------------------------------
 
@@ -9,7 +9,8 @@ PRINCIPALES MODULOS Y SUS CLASES
 
 REFERENCIA ESQUEMA UML ENTITIES
     https://github.com/perfiles/wiki/UML-de-Entidades-para-Perfiles
-'''
+"""
+
 # -*- coding: utf-8 -*-
 
 import sqlite3
@@ -21,4 +22,6 @@ from .right import *
 from .schema import *
 from .version import *
 from .appfile import *
+
+
 

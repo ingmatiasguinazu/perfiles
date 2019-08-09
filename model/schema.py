@@ -9,6 +9,8 @@ from . import *
 class Schema(Entity):
     """ Entidad Root de la aplicación
 
+
+
     """
     def __init__(self, p_vrs, p_recid=None):
         l_row = list()

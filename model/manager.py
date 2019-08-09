@@ -1,11 +1,7 @@
 
 # -*- coding: utf-8 -*-
 
-import sqlite3
-import os.path
-import datetime
-import model.exc as exc #Excepciones de la aplicación
-import model.dbfile as dbf
+import model.exc as exc  # Excepciones de la aplicación
 
 
 class Right:
@@ -13,31 +9,30 @@ class Right:
 
     Atributos
         p_app -- Referencia a la aplicacion a la cual pertenece
-        p_code -- Identificador (cadena) unico 
+        p_code -- Identificador (cadena) unico
         p_granted_value -- cadena que representa "habilitacion"
         p_protected_value -- cadena que representa "restriccion"
         p_recid -- None -> No grabado en la DB
                    <> None -> Recid con el que se registra en la DB
-    
-    Ejemplo1:  
+    Ejemplo1:
         code=RESTRCTED
         granted_value='NO'
         protected_value='YES'
 
-        es un elemento de permiso identificado con RESTRICTED.  
+        es un elemento de permiso identificado con RESTRICTED.
         la cadena que representa "habilitacion" es 'NO'
         la cadena que representa "proteccion" es 'YES'
-    
-     Ejemplo2:  
+
+     Ejemplo2:
         code=RIGHT_ADD
         granted_value=''
         protected_value='add'
 
-        es un elemento de permiso identificado con RIGHT_ADD.  
+        es un elemento de permiso identificado con RIGHT_ADD.
         la cadena que representa "habilitacion" es ''
         la cadena que representa "proteccion" es 'add'
    """
-    
+
 # Constructor
 
     def __init__(self, p_app, p_code, p_granted_value='GRANTED',
@@ -71,7 +66,7 @@ class Right:
             l_rights_ele_type.delete()
         for l_allocations in self.__allocations:
             l_allocations.delete()
-        #  Me elimino 
+        #  Me elimino
         if self.recid != None:
             l_del_keys = [self.__class__ , self.recid]
             self.__app._Application_deleted_keys__[
@@ -98,9 +93,9 @@ class Right:
             l_params = (self.recid, )
             l_cursor = p_db_cnx.execute(l_SQL, l_params)
             l_row = l_cursor.fetchone()
-            if l_row == None:
+            if l_row is None:
                 raise exc.CorruptDataBaseError(self.__class__, self.code, self.recid)
-            
+
             l_object_fields = (self.code, self.granted_value, self.protected_value)
             l_db_fields = (l_row['code'], l_row['granted_value'], l_row['protected_value'])
             if l_object_fields == l_db_fields:
@@ -108,8 +103,8 @@ class Right:
                 return None     #Nada para hacer.  No hay cambios
 
             #Hay cambios
-            if l_row['version_from_recid'] != p_vrs_recid: 
-                l_SQL = ('UPDATE rights' 
+            if l_row['version_from_recid'] != p_vrs_recid:
+                l_SQL = ('UPDATE rights'
                         +'   SET version_to_recid = ?'
                         +' WHERE recid = ?')
                 l_params = (p_vrs_recid, self.recid) #Desactivo valores anteriores
@@ -120,28 +115,28 @@ class Right:
                 l_SQL = ( 'UPDATE rights '
                         + '   SET code = ? ,'
                         +       ' granted_value = ? ,'
-                        +       ' protected_value = ? ,' 
+                        +       ' protected_value = ? ,'
                         +       ' application_recid = ? ,'
                         +       'version_from_recid = ?'
                         + 'WHERE recid = ?' )
                 l_params = (self.code, self.granted_value
                         , self.protected_value, self.__app._Applicationrecid
-                        , p_vrs_recid, self.recid) 
+                        , p_vrs_recid, self.recid)
                 p_db_cnx.execute(l_SQL, l_params)
                 print('modifico sobre valor actual %s %s' % (self.granted_value, self.protected_value))
 
         #Repregunta sin usar ELSE.  recid pudo cambiar
         if self.recid == None:
-            l_SQL = ( 'INSERT INTO rights' 
+            l_SQL = ( 'INSERT INTO rights'
                     +           ' (code, granted_value, protected_value,'
                     +            ' application_recid, version_from_recid)'
                     +     ' VALUES (?,?,?,?,?)' )
-            l_params = (self.code, self.granted_value, 
-                    self.protected_value, self.__app._Applicationrecid, 
-                    p_vrs_recid) 
+            l_params = (self.code, self.granted_value,
+                    self.protected_value, self.__app._Applicationrecid,
+                    p_vrs_recid)
             p_db_cnx.execute(l_SQL, l_params) #inserto el nuevo registro
             print('Creo nuevo valor')
-            
+
             l_SQL = ( ' SELECT recid '
                     + '    FROM rights '
                     + '   WHERE code = ? '
@@ -159,7 +154,7 @@ class Right:
     def __str__(self):
         l_obj = (' Objeto %s: Code=[%s] - granted_value=[%s] - '
                 + 'protected_value=[%s]'
-                + 'recid=[%d]') % (self.__class__, 
+                + 'recid=[%d]') % (self.__class__,
                     self.code, self.granted_value, self.protected_value,
                     self.recid)
         return l_obj

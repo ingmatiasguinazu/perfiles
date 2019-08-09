@@ -3,11 +3,13 @@
 
 import os.path
 import datetime
+import perfiles.views
 
 from . import *
 
 class Application(Entity):
     """ Applicacion.
+
 
     Atributos:
         p_recid --  = None -> No grabado en la DB
