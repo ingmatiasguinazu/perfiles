@@ -9,12 +9,12 @@ from . import View
 
 
 class FileView(View):
-    ''' Vista File 
+    ''' Vista File
 
     '''
-    
-   
-    def __init__(self, p_parent_wds, p_icon_lib, p_parent):        
+
+
+    def __init__(self, p_parent_wds, p_icon_lib, p_parent):
         '''Constructor'''
 
         # Definición de marco
@@ -24,29 +24,29 @@ class FileView(View):
     def setup(self):
         ''' Configuro widgets '''
 
-        #Titulo Tamaño Icono        
+        #Titulo Tamaño Icono
 
         # Menues
         self.wds['filemenu'] = tk.Menu(self.wds['gl_menubar'],tearoff=0)
         self.wds['new_act_menu'] = 0
-        self.wds['filemenu'].add_command(label='Nuevo') 
+        self.wds['filemenu'].add_command(label='Nuevo')
         self.wds['open_act_menu'] = 1
-        self.wds['filemenu'].add_command(label='Abrir') 
+        self.wds['filemenu'].add_command(label='Abrir')
         self.wds['save_act_menu'] = 2
-        self.wds['filemenu'].add_command(label='Grabar') 
+        self.wds['filemenu'].add_command(label='Grabar')
         self.wds['saveas_act_menu'] = 3
         self.wds['filemenu'].add_command(label='Grabar como')
         self.wds['discare_changes_act_menu'] = 4
         self.wds['filemenu'].add_command(label='Descartar Cambios')
-        self.wds['gl_menubar'].add_cascade(menu=self.wds['filemenu'], 
+        self.wds['gl_menubar'].add_cascade(menu=self.wds['filemenu'],
                 label='Archivo')
- 
+
         # widgets piropios
         self.wds['save_act_bt'] = tk.Button(self.wds['gl_toolbar'])
         self.wds['save_act_bt']['image'] = self.icon_lib['save32.png']
         self.wds['save_act_bt'].pack(side = tk.LEFT)
 
-    
+
     def refresh_model(self, p_db_file):
         ''' Refresco widget desde modelo '''
 
@@ -70,7 +70,7 @@ class FileView(View):
 
     def get_selection(self):
         ''' En función del widget, determina el modelo seleccionado '''
-            
+
         return None
 
 

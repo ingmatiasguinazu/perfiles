@@ -1,3 +1,5 @@
+""" ACA DOCUMENTACION DEL MODULO
+"""
 
 # -*- coding: utf-8 -*-
 
@@ -5,6 +7,8 @@ import sqlite3
 
 
 class DBFile:
+    """ ACA DOCUMENTACION DE LA CLASE
+    """
     def __init__(self,p_file):
 
         l_db_cnx = sqlite3.connect(p_file)

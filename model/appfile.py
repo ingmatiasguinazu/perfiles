@@ -22,7 +22,7 @@ from . import *
 
 
 class AppFile:
-        """Archivo de la applicación.
+    """Archivo de la applicación.
 
         Atributos
         r   db_cnx:  Conexion al archivo DB
@@ -39,26 +39,26 @@ class AppFile:
             downgrade_version: elimina version de trabajo y reabre version anterior
             clean_versions:  Depura historial hasta version x.
 
-        """
+    """
 
-        def __init__(self):
-                """Instancia objeto y/o inicializa propiedades.
+    def __init__(self):
+        """Instancia objeto y/o inicializa propiedades.
 
                 Parametros:  Ninguno
-                """
-                self.db_cnx = None
-                self.db_file = None
-                self.versions = {}
-                l_vrs = Version(self, 1, '-- Nueva Version --')
-                self.wrk_schema = l_vrs.get_schema()
+         """
+         self.db_cnx = None
+         self.db_file = None
+         self.versions = {}
+         l_vrs = Version(self, 1, '-- Nueva Version --')
+         self.wrk_schema = l_vrs.get_schema()
 
-        def open(self, p_file):
-                """ Abre archivo existente
+   def open(self, p_file):
+         """ Abre archivo existente
 
                 Parametros:
                     p_file:  ruta completa del archivo DB a abrir
 
-                """
+         """
 
                 # Verifico si archivo pre-existente
                 if not os.path.isfile(p_file):
